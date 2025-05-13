@@ -15,7 +15,12 @@ This workflow acts as the central brain, orchestrating different tools and servi
 * Gmail
 * (Add any other main services you remember, like Airtable, Google Sheets, SerpAPI, etc.)
 
-  ## Gestor Google Calendar Workflow
+  ## Telegram Workflow (Telegram.json)
+
+This workflow is responsible for handling communication with users via Telegram. It listens for new messages sent to your Telegram bot, forwards them to the "MAX" workflow for processing, and sends the AI assistant's responses back to the user on Telegram (either as text or voice).
+
+
+  ## Google Calendar tool Workflow
 
 This workflow provides a set of tools to manage Google Calendar events, including creating, reading, updating, deleting, and modifying reminders. It's designed to be used by the "MAX" workflow.
 
