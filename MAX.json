@@ -1,0 +1,973 @@
+{
+  "name": "MAX",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=Role:\nYou are an efficient, no-nonsense assistant. Precise, direct, and results-driven. Execute tasks fast and summarize concisely. \n\nYou are currently talking to Abel\nThe date and time are: {{ $now }}\n\nPersonality:\nDirect, logical, and highly efficient.\nNo unnecessary details, no sugarcoating.\nSerious, professional, with a hint of irony when fitting.\nRules:\nReceive → Analyze → Execute → Summarize (1 clear sentence).\nOnly elaborate if explicitly asked.\nSpeak in the user's language.\nAsk directly if something is unclear.\nExample Responses:\n✅ User: \"Summarize this email.\"\n💬 You: \"Meeting confirmed for Friday at 10 AM. No changes.\"\n\n✅ User: \"Generate a sales report.\"\n💬 You: \"Report done. Sales +12%, new clients: 8.\"\n\n✅ User: \"How did you do it?\"\n💬 You: \"Filtered data, extracted trends. Need details? Ask.\"\n\n✅ User: \"More details.\"\n💬 You: \"Fine. Here’s the breakdown: [detailed explanation].\"\n\nTools:\nGmail: Herramienta para enviar emails.\nSerpApi: PAra hacer busquedas en Internet\nGestorCalendario: Create, modify, or delete calendar events.\nMedidas: Log physical measurements (weight, fat %, etc.).\nCalculator: Perform math calculations.\nSave Memory: use this tool to store information about the user. \nExtract and summarize interesting information from the user message an pass it to this tool.\nMemories, latest user info:\n{{ $json.Memories.toJsonString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1160,
+        -620
+      ],
+      "id": "e854c1b8-2595-41c5-ad68-71f0f168add1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1260,
+        -400
+      ],
+      "id": "da08528a-8aff-4be8-8bbc-d3cc19582be0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nUN4q3uXxeO0qNxA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appJ2bhWpBBzgKQo7",
+          "mode": "list",
+          "cachedResultName": "Memories",
+          "cachedResultUrl": "https://airtable.com/appJ2bhWpBBzgKQo7"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYn45Yk86crhrTc",
+          "mode": "list",
+          "cachedResultName": "Memories",
+          "cachedResultUrl": "https://airtable.com/appJ2bhWpBBzgKQo7/tblYn45Yk86crhrTc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Memory": "={{$fromAI('Memory')}}",
+            "User": "Abel"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Memory",
+              "displayName": "Memory",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created",
+              "displayName": "Created",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -1020,
+        -400
+      ],
+      "id": "38366db4-a728-466a-84a9-db5c26642499",
+      "name": "Save Memory",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "L7PTQy8Yl3JTZrSl",
+          "name": "Airtable Personal Access Token account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appJ2bhWpBBzgKQo7",
+          "mode": "list",
+          "cachedResultName": "Memories",
+          "cachedResultUrl": "https://airtable.com/appJ2bhWpBBzgKQo7"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYn45Yk86crhrTc",
+          "mode": "list",
+          "cachedResultName": "Memories",
+          "cachedResultUrl": "https://airtable.com/appJ2bhWpBBzgKQo7/tblYn45Yk86crhrTc"
+        },
+        "filterByFormula": "({Usuario}= 'Abel')",
+        "options": {},
+        "sort": {
+          "property": [
+            {
+              "field": "Created"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1660,
+        -280
+      ],
+      "id": "b450edce-45f7-47b6-9d4f-bc77711c53a5",
+      "name": "Airtable",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "L7PTQy8Yl3JTZrSl",
+          "name": "Airtable Personal Access Token account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -1380,
+        -560
+      ],
+      "id": "3ac48d44-8265-4304-a12e-5bc46e15e581",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Memories",
+        "include": "specifiedFields",
+        "fieldsToInclude": "Memory, createdTime",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        -280
+      ],
+      "id": "0c86adcb-bc47-42f4-afcb-9f158d7aa414",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -380
+      ],
+      "id": "808750b9-bcf1-4ebc-ba73-27cc82d66b96",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 858711886,
+          "mode": "list",
+          "cachedResultName": "Medidas_Control",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E/edit#gid=858711886"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ControlID": "={{ (() => {\n     const ALPHABET = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\";\n     let uid = \"\";\n     for (let i = 0; i < 8; i++) {\n         uid += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));\n     }\n     return uid;\n})() }}\n",
+            "Fecha_Control": "={{$fromAI('Fecha_Control') }}",
+            "Hora": "={{$fromAI('Hora') }}",
+            "IdUsuario": "0f52d5db",
+            "Peso": "={{ $fromAI(\"Peso\").replace('.',',') }}",
+            "Musculo": "={{$fromAI('Musculo').replace('.',',')}}",
+            "Grasa": "={{$fromAI('Grasa').replace('.',',')}}",
+            "Visceral": "={{ $fromAI(\"Visceral\") }}",
+            "Bíceps": "={{$fromAI('biceps')}}",
+            "Tríceps": "={{$fromAI('triceps')}}",
+            "Subescapular": "={{$fromAI('Subescapular')}}",
+            "Suprailíaco": "={{$fromAI(\"Suprailiaco\")}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ControlID",
+              "displayName": "ControlID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_Control",
+              "displayName": "Fecha_Control",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hora",
+              "displayName": "Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IdUsuario",
+              "displayName": "IdUsuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Imagen",
+              "displayName": "Imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Datos Biopedancia",
+              "displayName": "Datos Biopedancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Peso",
+              "displayName": "Peso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IMC",
+              "displayName": "IMC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Musculo",
+              "displayName": "Musculo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Grasa",
+              "displayName": "Grasa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visceral",
+              "displayName": "Visceral",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pliegues",
+              "displayName": "Pliegues",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tríceps",
+              "displayName": "Tríceps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bíceps",
+              "displayName": "Bíceps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subescapular",
+              "displayName": "Subescapular",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Suprailíaco",
+              "displayName": "Suprailíaco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Perimetros",
+              "displayName": "Perimetros",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Brazo",
+              "displayName": "Brazo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Cintura",
+              "displayName": "Cintura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Muslo",
+              "displayName": "Muslo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date_lastChange",
+              "displayName": "Date_lastChange",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux1",
+              "displayName": "Aux1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux2",
+              "displayName": "Aux2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux3",
+              "displayName": "Aux3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux4",
+              "displayName": "Aux4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux5",
+              "displayName": "Aux5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux6",
+              "displayName": "Aux6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -900,
+        -400
+      ],
+      "id": "aeb2b4b0-1bbe-4042-9256-ef37047bdc89",
+      "name": "Medidas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gKuhv54NMvCfIkW6",
+          "name": "ProduccionAbelRod"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6406474207",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -340,
+        -780
+      ],
+      "id": "5b1802db-9d89-4f2d-bf36-d3905b3b2213",
+      "name": "Telegram",
+      "webhookId": "c8998b9c-aac3-47f9-b3be-8832f1ea6a37",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95fd906c-f670-446d-bf35-10b7644de602",
+              "name": "text",
+              "value": "={{ $json.body.text }}",
+              "type": "string"
+            },
+            {
+              "id": "bf0b9a79-5f48-40c8-a870-885268599d85",
+              "name": "tipo",
+              "value": "={{ $json.body.tipo}}",
+              "type": "string"
+            },
+            {
+              "id": "cd024120-70c9-4da8-9de9-0a98cef0bbdf",
+              "name": "chatOrigen",
+              "value": "={{ $json.body.Origen }}",
+              "type": "string"
+            },
+            {
+              "id": "ca28d2d0-78d5-4e85-8805-ede0acabacbf",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2ff618b5-abc8-4f34-b377-3a528a001470",
+              "name": "app",
+              "value": "={{ $json.body.app}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1640,
+        -500
+      ],
+      "id": "3fcec620-f0f2-4dcb-8251-06003e970324",
+      "name": "Set Text"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fec78d62-b451-4b38-b2f4-6e1e78e5c92d",
+              "leftValue": "={{ $('Merge').item.json.tipo }}",
+              "rightValue": "Voz",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        -820
+      ],
+      "id": "d43b24d4-9b12-4429-9bff-f3025dc4ab74",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $('AI Agent').item.json.output }}",
+        "voice": "onyx",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -540,
+        -940
+      ],
+      "id": "7fd7c3f5-45ac-4ceb-968b-b9a8de936233",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "nUN4q3uXxeO0qNxA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "6406474207",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -340,
+        -960
+      ],
+      "id": "c564887d-e6c8-4040-95fd-1b60688e191e",
+      "name": "Telegram1",
+      "webhookId": "1317ca84-bf4a-4d72-b0c4-51f87f497d16",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "6406474207"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1160,
+        -400
+      ],
+      "id": "c3a20b9a-6e68-46c0-af62-d3e7ccc01a21",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d9d24840-f6c3-4a5b-b227-421f48a9a6fe",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1920,
+        -500
+      ],
+      "id": "314d5d25-67d3-430a-b76f-a707dae284c9",
+      "name": "Webhook",
+      "webhookId": "d9d24840-f6c3-4a5b-b227-421f48a9a6fe"
+    },
+    {
+      "parameters": {
+        "name": "GestorCalendario",
+        "description": "Call this tool to create, modify, or delete events in the user's Google Calendar based on the given instructions.",
+        "workflowId": {
+          "__rl": true,
+          "value": "zZXinYc2Es6pj25c",
+          "mode": "list",
+          "cachedResultName": "GestorCalendario"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -780,
+        -380
+      ],
+      "id": "0cec8ac3-6510-4e6b-89ad-e3fe506b98e6",
+      "name": "GestorCalendario"
+    },
+    {
+      "parameters": {
+        "options": {
+          "google_domain": "google.com"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        -380
+      ],
+      "id": "cfc1bae1-275d-44f7-8b12-1f9828bc7abe",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "RdpZyX2ft4EOoGLl",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "height": 1360,
+        "width": 2640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2420,
+        -1120
+      ],
+      "id": "6c911b7b-038b-4c68-8ea1-a94d345b1502",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Memory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Medidas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Text": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Text",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GestorCalendario": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "78fc21eb-3fe6-4562-a6f3-09f469556dbc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0fd7a3ae1e5cb67302059089dbefe8ab1b69ab5eddbc319042d4c136f4f12b0c"
+  },
+  "id": "B3Woxmeu9Qbece0a",
+  "tags": []
+}
