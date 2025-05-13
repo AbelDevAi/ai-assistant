@@ -39,3 +39,12 @@ To interact with the AI assistant, send a message to your Telegram bot. The "MAX
 * "What's the weather like in Lugo?" (using SerpAPI)
 * "Add an event to my calendar for tomorrow at 10 AM called 'Meeting with John'." (using Gestor Google Calendar)
 * "Remind me in 30 minutes." (using Gestor Google Calendar)
+
+## Important Considerations / Configuration Notes
+
+* **Google Sheets Integration:** The "MAX" workflow includes a node for interacting with Google Sheets. Please note that this node is currently configured to connect to a specific Google Sheet used for internal data logging. **To use this functionality, you will need to:**
+    * Have a Google account with Google Sheets enabled.
+    * Create your own Google Sheet where you want the data to be logged.
+    * **Crucially, you will need to reconfigure the "Google Sheets" node in the "MAX" workflow with your own Google Sheets credentials and specify the correct Spreadsheet ID and Sheet Name.** Instructions on how to set up Google Sheets credentials in n8n can be found in the official n8n documentation.
+
+* **Other Service Credentials:** Similarly, ensure you have configured your own API keys and credentials for all the other services used in the workflows (Telegram, OpenAI, Airtable, SerpAPI, Google Calendar, Gmail, Pinecone). The workflows will not function correctly without these valid credentials.
