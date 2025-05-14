@@ -1,0 +1,458 @@
+{
+  "name": "Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "67c2141b-1ae4-49a4-8aea-7354ab53afe2",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b08b3fba-7b19-4bc8-984f-42e8c9c8fb97",
+                    "leftValue": "{{ $json.message.photo}}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Photo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        -240
+      ],
+      "id": "95056794-7147-4ec1-8860-d97de0262ea9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        -440
+      ],
+      "id": "de89c3b1-4c27-4c12-9cc3-9b74536570c9",
+      "name": "DownloadVoice",
+      "webhookId": "75f9559b-8229-4762-b517-821e77c65621",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        380,
+        -440
+      ],
+      "id": "e9cc34b4-a2dc-45c0-8694-b976dec292ab",
+      "name": "Transcribe",
+      "credentials": {
+        "openAiApi": {
+          "id": "nUN4q3uXxeO0qNxA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -420,
+        -240
+      ],
+      "id": "433a1b36-7d7c-41dc-8ee8-e0a0f7fc8061",
+      "name": "Telegram Trigger",
+      "webhookId": "fc80e46b-ffd0-46d7-bc13-38f796a9db3a",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95fd906c-f670-446d-bf35-10b7644de602",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "bf0b9a79-5f48-40c8-a870-885268599d85",
+              "name": "Origen",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}\n",
+              "type": "string"
+            },
+            {
+              "id": "372b233b-2f0f-4e71-b999-de603ccb7952",
+              "name": "tipo",
+              "value": "text",
+              "type": "string"
+            },
+            {
+              "id": "58b6b165-a899-4ca2-a1a8-fe32b49c8b65",
+              "name": "name",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "21303b17-92b5-45bb-b3a3-c4c669190670",
+              "name": "app",
+              "value": "Telegram",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        -240
+      ],
+      "id": "154b05c4-abc9-4745-b771-12e68cdd6b78",
+      "name": "Set Text1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0304b126-f761-4ecb-94bd-e0aa83d35574",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        580,
+        -240
+      ],
+      "id": "20f9d59e-9259-4632-858c-eaa961bc1708",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6212c89-2405-410c-b3ef-a00c6277bc3d",
+              "name": "origen",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "7cff322d-003a-457a-ad1c-aac59a6e6238",
+              "name": "tipo",
+              "value": "Voz",
+              "type": "string"
+            },
+            {
+              "id": "d1b28047-5288-46a5-b850-76a59a3650e1",
+              "name": "name",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "1d2078ef-fa39-4bc1-820e-d8608d896e80",
+              "name": "file.id",
+              "value": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+              "type": "string"
+            },
+            {
+              "id": "bcead428-63b6-4539-b877-7a56dc1597fb",
+              "name": "app",
+              "value": "Telegram",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        -440
+      ],
+      "id": "96f9f256-e44a-457d-837f-ebd3bb821f22",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bbv68yj3.rpcld.co/webhook/d9d24840-f6c3-4a5b-b227-421f48a9a6fe",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name || $('Edit Fields').item.json.name }}\n"
+            },
+            {
+              "name": "tipo",
+              "value": "={{ $json.tipo  || $('Edit Fields').item.json.tipo }}"
+            },
+            {
+              "name": "chatOrigen",
+              "value": "={{ $json.query.Origen || $('Edit Fields').item.json.query.origen}}"
+            },
+            {
+              "name": "app",
+              "value": "={{ $json.app || $('Edit Fields').item.json.app }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        -220
+      ],
+      "id": "e320738e-47fa-416f-9188-40b747ebf90d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bbv68yj3.rpcld.co/webhook/45519f49-c619-4896-8c16-b92cb3868e64",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.message.photo[2].file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        -20
+      ],
+      "id": "47b9a5c1-9e82-4bc2-a903-3be4f11c5107",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Text1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DownloadVoice": {
+      "main": [
+        [
+          {
+            "node": "Transcribe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Text1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "DownloadVoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9f561927-a3ab-4426-9edf-abb0ed69846d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0fd7a3ae1e5cb67302059089dbefe8ab1b69ab5eddbc319042d4c136f4f12b0c"
+  },
+  "id": "xWR2jBUrwzvZVMAp",
+  "tags": []
+}

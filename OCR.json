@@ -1,0 +1,621 @@
+{
+  "name": "OCR",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "You will be provided with an image. Your task is to:\n\n1. Classify the image into one of the following categories: \"Body Measurements\" or \"Other\".\n2. If the image is classified as \"Body Measurements\", extract the data as a valid and complete JSON object. The keys of the main object should be the dates, in the imagen the format is DD/MM/YY; you have to convert it to DD/MM/YYYY; and the values should be objects containing the corresponding measurements. The keys for the measurements must be: \"weight\", \"bmi\", \"muscle_percentage\", \"body_fat_percentage\", \"visceral_fat\", \"Muscle KG\", \"Fat Kg\", \"triceps\", \"biceps\", \"subscapular\", \"suprailiac\".\n\n   Here's the description of the data for \"Body Measurements\" images:\n\n   - This is an image of an Excel sheet.\n   - There are a few body measurements.\n   - No names are provided for the measurements in the sheet itself.\n   - Each column represents a different measurement taken on a specific date.\n   - The dates for each measurement are in the first row.\n   - The subsequent rows represent the following body measurements in order:\n     - Row 2: (Empty - Ignore this row)\n     - Row 3: Weight (in kilograms)\n     - Row 4: BMI (Body Mass Index)\n     - Row 5: Muscle Percentage\n     - Row 6: Body Fat Percentage\n     - Row 7: Visceral Fat (units)\n     - Row 8: Muscle weight (in Kilograms)\n     - Row 9: Fat Weight (in Kilograms)\n     - Row 10: Triceps skinfold (units)\n     - Row 11: Biceps skinfold (units)\n     - Row 12: Subscapular skinfold (units)\n     - Row 13: Suprailiac skinfold (units)\n\n   Your output for \"Body Measurements\" MUST be a valid and complete JSON object in the following format. Do not include any additional text or explanations before or after the JSON:\n\n   ```json\n   {\n     \"type\": \"Body Measurements\",\n     \"data\": {\n       \"DD/MM/YYYY\": {\n         \"weight\": number,\n         \"bmi\": number,\n         \"muscle_percentage\": number,\n         \"body_fat_percentage\": number,\n         \"visceral_fat\": number,\n         \"Muscle KG\": number,\n         \"Fat Kg\": number,\n         \"triceps\": number,\n         \"biceps\": number,\n         \"subscapular\": number,\n         \"suprailiac\": number\n       },\n       \"DD/MM/YYYY\": {\n         // ... data for another date ...\n       }\n       // ... more dates ...\n     }\n   }\n3-If the image is classified as other, give a one prahse description of the image. and return a json file :\n```json\n{ \n   \"type\": \"other\",\n    \"data\": { \"description\": \"a string descriving the image\"}\n}",
+        "imageUrls": "=https://api.telegram.org/file/bot7928498870:AAFxHgMEFskWyPGUKZ8d_nHKnZbZBAUJ-qs/{{ $json.result.file_path }}",
+        "simplify": false,
+        "options": {
+          "maxTokens": 1500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        140,
+        -60
+      ],
+      "id": "c538983f-6727-4b85-8f9f-6d81a56e83b1",
+      "name": "OpenAI",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "nUN4q3uXxeO0qNxA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "45519f49-c619-4896-8c16-b92cb3868e64",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        -60
+      ],
+      "id": "f6c6f41d-6001-4334-8818-57d4494aa99f",
+      "name": "Webhook",
+      "webhookId": "45519f49-c619-4896-8c16-b92cb3868e64"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "options": {
+          "systemMessage": "You are a helpful agent designed to process information about images. You receive a JSON object containing data extracted from an image. Your task is to identify if the data contains body measurements and, if so, interact with a Google Sheet to store this information for each date found. If the data does not represent body measurements with dates, only pass teh description provided as output.\n\nYou have access to the following tools:\n\n- `get_info_from_sheet(date)`: This tool takes a date in string (in the format 'DD/MM/YYYY') as input and retrieves the row from the Google Sheet where the 'Fecha_control' column matches the input date. If no row exists for that date, it returns null.\n- `append_row_to_sheet(date, data)`: This tool takes a date string (in the format 'DD/MM/YYYY') and a JSON object containing the body measurements with the following keys (and their corresponding Spanish column translations): \"weight\" (Peso), \"bmi\" (IMC), \"muscle_percentage\" (Musculo), \"body_fat_percentage\" (Grasa), \"visceral_fat\" (Visceral), \"Muscle KG\" (\"Muscle KG\"), \"Fat Kg\" (\"Fat Kg\"), \"triceps\" (Tríceps), \"biceps\" (Bíceps), \"subscapular\" (Subescapular), \"suprailiac\" (Suprailíaco). It appends a new row to the Google Sheet with the provided date in the 'Fecha_control' column and the corresponding measurement values in their respective Spanish columns.\n\nHere's how you should process the input:\n\n\nInstructions:\n\nIf the root is an object with date keys:\nExtract the first date (key) from the root object. \nCall the get_info_from_sheet tool with the current date to compare with the 'Fecha_control' column.\n  If the result of get_info_from_sheet is null:\n    Call the append_row_to_sheet tool with the current date and the corresponding measurement data from the root object for that date.\n  If the result of get_info_from_sheet is not null:\n    Note that measurements already exist for this date.\nExtract nxt date and repeat until all dates are processed.\nAfter processing all dates, respond with a summary text: \"Mediciones añadidas para las siguientes fechas: [list of newly added dates].\" If no new dates were added, indicate that.\nIf the root of the JSON is an object containing a \"description\" key:\nExtract the value of the \"description\" key.\nRespond with the extracted description.\nExample Responses:\n\nFor Body Measurements (new entries for multiple dates): \"Mediciones añadidas para las siguientes fechas: 29/04/2025, 06/05/2025, 13/05/2025. \"\nFor Body Measurements (some new, some existing): \"Mediciones añadidas para las siguientes fechas: 06/05/2025.\"\nFor Body Measurements (all existing): \"ya existian mediciones pàra las fechas enviadas\"\nFor Other: \"The image shows a close-up photograph of a brown bird perched on a branch with green leaves.\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        500,
+        -60
+      ],
+      "id": "853b5b8b-2dbc-4eec-afdd-aff47caed4ee",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "gpt-4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        180
+      ],
+      "id": "7dd9ae68-3e5d-46e2-b6a4-cfd37181a21f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nUN4q3uXxeO0qNxA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.first().json.choices[0].message.content;\nlet jsonString = content;\n\n// Intenta extraer el JSON si está dentro de un bloque de código\nconst jsonBlockMatch = content.match(/```(?:json)?\\n([\\s\\S]*?)\\n```/);\nif (jsonBlockMatch && jsonBlockMatch[1]) {\n  jsonString = jsonBlockMatch[1];\n}\n\ntry {\n  const jsonOutput = JSON.parse(jsonString);\n  return [{ json: jsonOutput }];\n} catch (error) {\n \n  return [{ json: { rawContent: content, error: \"Failed to parse JSON\" } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -60
+      ],
+      "id": "10c620a3-ff51-4b72-8b72-2f1691f91af6",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 858711886,
+          "mode": "list",
+          "cachedResultName": "Medidas_Control",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E/edit#gid=858711886"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Fecha_Control",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        580,
+        180
+      ],
+      "id": "67950d21-a8be-4c6f-8a96-43dbc019c2aa",
+      "name": "get_info_from_sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gKuhv54NMvCfIkW6",
+          "name": "ProduccionAbelRod"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 858711886,
+          "mode": "list",
+          "cachedResultName": "Medidas_Control",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o60rOzkr-srHu_zRjd9iv8oWwtgl_ZTLJUdzTzyGU4E/edit#gid=858711886"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ControlID": "={{ (() => {\n     const ALPHABET = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\";\n     let uid = \"\";\n     for (let i = 0; i < 8; i++) {\n         uid += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));\n     }\n     return uid;\n})() }}\n",
+            "Fecha_Control": "={{$fromAI('Fecha_Control') }}",
+            "IdUsuario": "0f52d5db",
+            "Peso": "={{ $fromAI(\"Peso\").replace('.',',') }}",
+            "Musculo": "={{$fromAI('Musculo').replace('.',',')}}",
+            "Grasa": "={{$fromAI('Grasa').replace('.',',')}}",
+            "Visceral": "={{ $fromAI(\"Visceral\") }}",
+            "Bíceps": "={{$fromAI('biceps')}}",
+            "Tríceps": "={{$fromAI('triceps')}}",
+            "Subescapular": "={{$fromAI('Subescapular')}}",
+            "Suprailíaco": "={{$fromAI(\"Suprailiaco\")}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ControlID",
+              "displayName": "ControlID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_Control",
+              "displayName": "Fecha_Control",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hora",
+              "displayName": "Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "IdUsuario",
+              "displayName": "IdUsuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Imagen",
+              "displayName": "Imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Datos Biopedancia",
+              "displayName": "Datos Biopedancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Peso",
+              "displayName": "Peso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IMC",
+              "displayName": "IMC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Musculo",
+              "displayName": "Musculo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Grasa",
+              "displayName": "Grasa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visceral",
+              "displayName": "Visceral",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pliegues",
+              "displayName": "Pliegues",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tríceps",
+              "displayName": "Tríceps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bíceps",
+              "displayName": "Bíceps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subescapular",
+              "displayName": "Subescapular",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Suprailíaco",
+              "displayName": "Suprailíaco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Perimetros",
+              "displayName": "Perimetros",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Brazo",
+              "displayName": "Brazo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Cintura",
+              "displayName": "Cintura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Muslo",
+              "displayName": "Muslo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date_lastChange",
+              "displayName": "Date_lastChange",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux1",
+              "displayName": "Aux1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux2",
+              "displayName": "Aux2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux3",
+              "displayName": "Aux3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux4",
+              "displayName": "Aux4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux5",
+              "displayName": "Aux5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Aux6",
+              "displayName": "Aux6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        760,
+        180
+      ],
+      "id": "daf31180-f4dd-46c0-83fd-f95df09595a1",
+      "name": "append_row_to_sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gKuhv54NMvCfIkW6",
+          "name": "ProduccionAbelRod"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6406474207",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        -60
+      ],
+      "id": "2b69f19b-094a-4f7e-9644-7fc9187a4995",
+      "name": "Respond",
+      "webhookId": "c8998b9c-aac3-47f9-b3be-8832f1ea6a37",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.body.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -60,
+        -60
+      ],
+      "id": "0a350d39-2bef-470b-8656-19dca2aa4acd",
+      "name": "GetFile",
+      "webhookId": "c7efacc9-cefa-4bfe-ab60-a6abfcebd225",
+      "credentials": {
+        "telegramApi": {
+          "id": "rrPofVAketH22xGn",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "GetFile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_info_from_sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "append_row_to_sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetFile": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5d31e785-013f-4b2f-a4bb-df608736d191",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0fd7a3ae1e5cb67302059089dbefe8ab1b69ab5eddbc319042d4c136f4f12b0c"
+  },
+  "id": "uAeSEnhUeKCECNJ8",
+  "tags": []
+}
