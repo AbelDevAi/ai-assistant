@@ -13,7 +13,7 @@ This workflow acts as the central brain, orchestrating different tools and servi
 * Google sheets
 * Google Calendar
 * Gmail
-* (Add any other main services you remember, like Airtable, Google Sheets, SerpAPI, etc.)
+
 
   ## Telegram Workflow (Telegram.json)
 
